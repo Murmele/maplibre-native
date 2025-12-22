@@ -1,0 +1,1 @@
+sourceset_dependencies='{":MapLibreAndroid/debug":[],":MapLibreAndroid/main":[],":MapLibreAndroid/opengl":[],":MapLibreAndroid/openglDebug":[],":MapLibreAndroid/openglRelease":[],":MapLibreAndroid/release":[],":MapLibreAndroid/vulkan":[],":MapLibreAndroid/vulkanDebug":[],":MapLibreAndroid/vulkanRelease":[]}'

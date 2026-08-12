@@ -10,6 +10,7 @@
 #include <mbgl/webgpu/command_encoder.hpp>
 #include <mbgl/webgpu/drawable_builder.hpp>
 #include <mbgl/webgpu/draw_scope_resource.hpp>
+#include <mbgl/webgpu/dynamic_texture.hpp>
 #include <mbgl/webgpu/offscreen_texture.hpp>
 #include <mbgl/gfx/upload_pass.hpp>
 #include <mbgl/webgpu/uniform_buffer.hpp>
@@ -52,10 +53,12 @@ Context::Context(RendererBackend& backend_)
       backend(backend_),
       globalUniformBuffers(std::make_unique<UniformBufferArray>()) {}
 
-Context::~Context() = default;
+Context::~Context() {
+    backend.getThreadPool().runRenderJobs(true /* closeQueue */);
+}
 
 void Context::beginFrame() {
-    // Begin a new frame - WebGPU command recording starts here
+    backend.getThreadPool().runRenderJobs();
 }
 
 void Context::endFrame() {
@@ -63,11 +66,11 @@ void Context::endFrame() {
 }
 
 void Context::performCleanup() {
-    // Clean up unused resources
+    backend.getThreadPool().runRenderJobs();
 }
 
 void Context::reduceMemoryUsage() {
-    // Free cached resources to reduce memory
+    backend.getThreadPool().runRenderJobs();
 }
 
 std::unique_ptr<gfx::OffscreenTexture> Context::createOffscreenTexture(Size size,
@@ -123,6 +126,10 @@ LayerGroupPtr Context::createLayerGroup(int32_t layerIndex, std::size_t initialC
 
 gfx::Texture2DPtr Context::createTexture2D() {
     return std::make_shared<Texture2D>(*this);
+}
+
+gfx::DynamicTexturePtr Context::createDynamicTexture(Size size, gfx::TexturePixelType pixelType) {
+    return std::make_shared<DynamicTexture>(*this, size, pixelType);
 }
 
 RenderTargetPtr Context::createRenderTarget(const Size size, const gfx::TextureChannelDataType type) {
@@ -455,7 +462,8 @@ gfx::AttributeBindingArray Context::getOrCreateVertexBindings(gfx::Context&,
                 result[index] = {/*.attribute = */ {attr.getDataType(), /*offset=*/0},
                                  /*.vertexStride = */ static_cast<uint32_t>(attr.getStride()),
                                  /*.vertexBufferResource = */ bufferResource.get(),
-                                 /*.vertexOffset = */ 0};
+                                 /*.vertexOffset = */ 0,
+                                 /*.bufferIndex = */ 0};
             }
         }
     });

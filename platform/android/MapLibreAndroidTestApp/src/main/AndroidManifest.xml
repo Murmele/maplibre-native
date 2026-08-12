@@ -687,6 +687,18 @@
                 android:value=".activity.FeatureOverviewActivity" />
         </activity>
         <activity
+            android:name=".activity.style.StyleUrlActivity"
+            android:description="@string/description_style_url"
+            android:exported="true"
+            android:label="@string/activity_style_url">
+            <meta-data
+                android:name="@string/category"
+                android:value="@string/category_style" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.FeatureOverviewActivity" />
+        </activity>
+        <activity
             android:name=".activity.style.CustomSpriteActivity"
             android:description="@string/description_custom_sprite"
             android:exported="true"
@@ -757,6 +769,18 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activity.FeatureOverviewActivity" />
+        </activity>
+        <activity
+            android:name=".activity.sources.PMTilesActivity"
+            android:description="@string/description_pmtiles"
+            android:exported="true"
+            android:label="@string/activity_pmtiles">
+            <meta-data
+                android:name="@string/category"
+                android:value="@string/category_data" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.FeatureOverviewActivity" />
         </activity> <!-- Features -->
         <activity
             android:name=".activity.feature.QueryRenderedFeaturesPropertiesActivity"
@@ -812,6 +836,18 @@
             android:description="@string/description_query_source_features"
             android:exported="true"
             android:label="@string/activity_query_source_features">
+            <meta-data
+                android:name="@string/category"
+                android:value="@string/category_features" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.FeatureOverviewActivity" />
+        </activity>
+        <activity
+            android:name=".activity.feature.FeatureStateActivity"
+            android:description="@string/description_feature_state"
+            android:exported="true"
+            android:label="@string/activity_feature_state">
             <meta-data
                 android:name="@string/category"
                 android:value="@string/category_features" />
@@ -972,6 +1008,18 @@
             <meta-data
                 android:name="@string/category"
                 android:value="@string/category_textureview" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.FeatureOverviewActivity" />
+        </activity>
+        <activity
+            android:name=".activity.surfaceview.SurfaceViewResizeActivity"
+            android:description="@string/description_surfaceview_resize"
+            android:exported="true"
+            android:label="@string/activity_surfaceview_resize">
+            <meta-data
+                android:name="@string/category"
+                android:value="@string/category_surfaceview" />
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activity.FeatureOverviewActivity" />

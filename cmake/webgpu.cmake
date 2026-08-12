@@ -9,16 +9,22 @@ target_compile_definitions(
         MLN_RENDER_BACKEND_WEBGPU=1
 )
 
+target_include_directories(
+        mbgl-core
+        PUBLIC
+        ${PROJECT_SOURCE_DIR}/platform/default/include
+)
+
 list(APPEND
         SRC_FILES
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/buffer_resource.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/context.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/command_encoder.cpp
-        ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/headless_backend.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/renderer_backend.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/drawable.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/drawable_builder.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/draw_scope_resource.cpp
+        ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/dynamic_texture.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/uniform_buffer.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/shader_program.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/wgsl_preprocessor.cpp
@@ -35,6 +41,7 @@ list(APPEND
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/heatmap_texture.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/hillshade.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/hillshade_prepare.cpp
+        ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/color_relief.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/line.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/location_indicator.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/shaders/webgpu/raster.cpp
@@ -55,6 +62,7 @@ list(APPEND
         ${PROJECT_SOURCE_DIR}/include/mbgl/webgpu/context.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/webgpu/drawable.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/webgpu/drawable_builder.hpp
+        ${PROJECT_SOURCE_DIR}/include/mbgl/webgpu/dynamic_texture.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/webgpu/index_buffer_resource.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/webgpu/render_pass.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/webgpu/renderer_backend.hpp
@@ -73,6 +81,7 @@ list(APPEND
         ${PROJECT_SOURCE_DIR}/include/mbgl/shaders/webgpu/heatmap_texture.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/shaders/webgpu/hillshade.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/shaders/webgpu/hillshade_prepare.hpp
+        ${PROJECT_SOURCE_DIR}/include/mbgl/shaders/webgpu/color_relief.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/shaders/webgpu/line.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/shaders/webgpu/location_indicator.hpp
         ${PROJECT_SOURCE_DIR}/include/mbgl/shaders/webgpu/raster.hpp
@@ -91,6 +100,7 @@ list(APPEND
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/context.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/drawable.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/drawable_builder.cpp
+        ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/dynamic_texture.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/index_buffer_resource.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/render_pass.cpp
         ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/renderer_backend.cpp
@@ -108,9 +118,15 @@ include(${PROJECT_SOURCE_DIR}/vendor/webgpu.cmake)
 if(MLN_WEBGPU_IMPL_DAWN)
     include(${PROJECT_SOURCE_DIR}/vendor/dawn.cmake)
     if(TARGET mbgl-vendor-dawn)
-        target_link_libraries(mbgl-core PRIVATE mbgl-vendor-dawn)
+        if(MLN_WEBGPU_EMDAWN)
+            # Emdawn is a compiler/linker port rather than a conventional
+            # library. Consumers must inherit its final-link options.
+            target_link_libraries(mbgl-core PUBLIC mbgl-vendor-dawn)
+        else()
+            target_link_libraries(mbgl-core PRIVATE mbgl-vendor-dawn)
+        endif()
     endif()
-elseif(MLN_WEBGPU_IMPL_WGPU)
+elseif(MLN_WEBGPU_IMPL_WGPU OR MLN_WEBGPU_IMPL_FFI)
     # Include wgpu-native integration
     include(${PROJECT_SOURCE_DIR}/vendor/wgpu.cmake)
     if(TARGET mbgl-vendor-wgpu)
@@ -118,4 +134,9 @@ elseif(MLN_WEBGPU_IMPL_WGPU)
         # Add WebGPU-Cpp implementation file (required for wgpu-native backend)
         list(APPEND SRC_FILES ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/webgpu_cpp_impl.cpp)
     endif()
+endif()
+
+# Headless backend uses Dawn native / wgpu-native bootstrap; skip for emdawnwebgpu.
+if(NOT MLN_WEBGPU_EMDAWN)
+    list(APPEND SRC_FILES ${PROJECT_SOURCE_DIR}/src/mbgl/webgpu/headless_backend.cpp)
 endif()

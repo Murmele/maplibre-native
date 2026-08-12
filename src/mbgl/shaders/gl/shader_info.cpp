@@ -228,7 +228,8 @@ const std::vector<UniformBlockInfo> FillExtrusionShaderInfo::uniformBlocks = {
 };
 const std::vector<AttributeInfo> FillExtrusionShaderInfo::attributes = {
     AttributeInfo{"a_pos", idFillExtrusionPosVertexAttribute},
-    AttributeInfo{"a_normal_ed", idFillExtrusionNormalEdVertexAttribute},
+    AttributeInfo{"a_decimals_ed", idFillExtrusionDecimalsEdAttribute},
+    AttributeInfo{"a_normal2d", idFillExtrusionNormal2DVertexAttribute},
     AttributeInfo{"a_base", idFillExtrusionBaseVertexAttribute},
     AttributeInfo{"a_height", idFillExtrusionHeightVertexAttribute},
     AttributeInfo{"a_color", idFillExtrusionColorVertexAttribute},
@@ -246,7 +247,8 @@ const std::vector<UniformBlockInfo> FillExtrusionPatternShaderInfo::uniformBlock
 };
 const std::vector<AttributeInfo> FillExtrusionPatternShaderInfo::attributes = {
     AttributeInfo{"a_pos", idFillExtrusionPosVertexAttribute},
-    AttributeInfo{"a_normal_ed", idFillExtrusionNormalEdVertexAttribute},
+    AttributeInfo{"a_decimals_ed", idFillExtrusionDecimalsEdAttribute},
+    AttributeInfo{"a_normal2d", idFillExtrusionNormal2DVertexAttribute},
     AttributeInfo{"a_base", idFillExtrusionBaseVertexAttribute},
     AttributeInfo{"a_height", idFillExtrusionHeightVertexAttribute},
     AttributeInfo{"a_pattern_from", idFillExtrusionPatternFromVertexAttribute},
@@ -314,6 +316,24 @@ const std::vector<AttributeInfo> HillshadeShaderInfo::attributes = {
 };
 const std::vector<TextureInfo> HillshadeShaderInfo::textures = {
     TextureInfo{"u_image", idHillshadeImageTexture},
+};
+
+// Color Relief
+using ColorReliefShaderInfo = ShaderInfo<BuiltIn::ColorReliefShader, gfx::Backend::Type::OpenGL>;
+
+const std::vector<UniformBlockInfo> ColorReliefShaderInfo::uniformBlocks = {
+    UniformBlockInfo{"ColorReliefDrawableUBO", idColorReliefDrawableUBO},
+    UniformBlockInfo{"ColorReliefTilePropsUBO", idColorReliefTilePropsUBO},
+    UniformBlockInfo{"ColorReliefEvaluatedPropsUBO", idColorReliefEvaluatedPropsUBO},
+};
+const std::vector<AttributeInfo> ColorReliefShaderInfo::attributes = {
+    AttributeInfo{"a_pos", idColorReliefPosVertexAttribute},
+    AttributeInfo{"a_texture_pos", idColorReliefTexturePosVertexAttribute},
+};
+const std::vector<TextureInfo> ColorReliefShaderInfo::textures = {
+    TextureInfo{"u_image", idColorReliefImageTexture},
+    TextureInfo{"u_elevation_stops", idColorReliefElevationStopsTexture},
+    TextureInfo{"u_color_stops", idColorReliefColorStopsTexture},
 };
 
 // Line

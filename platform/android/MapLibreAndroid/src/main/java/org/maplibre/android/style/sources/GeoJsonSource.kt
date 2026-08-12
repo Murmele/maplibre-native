@@ -2,6 +2,7 @@ package org.maplibre.android.style.sources
 
 import androidx.annotation.Keep
 import androidx.annotation.UiThread
+import com.google.gson.JsonObject
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.Geometry
@@ -240,11 +241,7 @@ class GeoJsonSource : Source {
             return
         }
         checkThread()
-        if (nativeIsUpdateSynchronous()) {
-            nativeSetFeatureSync(feature)
-        } else {
-            nativeSetFeature(feature)
-        }
+        nativeSetFeature(feature)
     }
 
     /**
@@ -260,11 +257,7 @@ class GeoJsonSource : Source {
             return
         }
         checkThread()
-        if (nativeIsUpdateSynchronous()) {
-            nativeSetGeometrySync(geometry)
-        } else {
-            nativeSetGeometry(geometry)
-        }
+        nativeSetGeometry(geometry)
     }
 
     /**
@@ -285,11 +278,7 @@ class GeoJsonSource : Source {
             val featuresCopy: List<Feature> = ArrayList(features)
             featureCollection = FeatureCollection.fromFeatures(featuresCopy)
         }
-        if (nativeIsUpdateSynchronous()) {
-            nativeSetFeatureCollectionSync(featureCollection)
-        } else {
-            nativeSetFeatureCollection(featureCollection)
-        }
+        nativeSetFeatureCollection(featureCollection)
     }
 
     /**
@@ -304,77 +293,7 @@ class GeoJsonSource : Source {
             return
         }
         checkThread()
-        if (nativeIsUpdateSynchronous()) {
-            nativeSetGeoJsonStringSync(json)
-        } else {
-            nativeSetGeoJsonString(json)
-        }
-    }
-
-    /**
-     * Updates the GeoJson with a single feature. The update is performed synchronously,
-     * so the data will be immediately visible and available to query when this method returns.
-     *
-     * @param feature the GeoJSON [Feature] to set
-     */
-    @Deprecated("use {@link GeoJsonOptions#withSynchronousUpdate(Boolean)} to enable synchronous updates on construction")
-    fun setGeoJsonSync(feature: Feature?) {
-        if (detached) {
-            return
-        }
-        checkThread()
-        nativeSetFeatureSync(feature)
-    }
-
-    /**
-     * Updates the GeoJson with a single geometry. The update is performed synchronously,
-     * so the data will be immediately visible and available to query when this method returns.
-     *
-     * @param geometry the GeoJSON [Geometry] to set
-     */
-    @Deprecated("use {@link GeoJsonOptions#withSynchronousUpdate(Boolean)} to enable synchronous updates on construction")
-    fun setGeoJsonSync(geometry: Geometry?) {
-        if (detached) {
-            return
-        }
-        checkThread()
-        nativeSetGeometrySync(geometry)
-    }
-
-    /**
-     * Updates the GeoJson. The update is performed synchronously,
-     * so the data will be immediately visible and available to query when this method returns.
-     *
-     * @param featureCollection the GeoJSON FeatureCollection
-     */
-    @Deprecated("use {@link GeoJsonOptions#withSynchronousUpdate(Boolean)} to enable synchronous updates on construction")
-    fun setGeoJsonSync(featureCollection: FeatureCollection?) {
-        if (detached) {
-            return
-        }
-        checkThread()
-        if (featureCollection != null && featureCollection.features() != null) {
-            val features = featureCollection.features()
-            val featuresCopy: List<Feature> = ArrayList(features)
-            nativeSetFeatureCollectionSync(FeatureCollection.fromFeatures(featuresCopy))
-        } else {
-            nativeSetFeatureCollectionSync(featureCollection)
-        }
-    }
-
-    /**
-     * Updates the GeoJson. The update is performed synchronously,
-     * so the data will be immediately visible and available to query when this method returns.
-     *
-     * @param json the raw GeoJson FeatureCollection string
-     */
-    @Deprecated("use {@link GeoJsonOptions#withSynchronousUpdate(Boolean)} to enable synchronous updates on construction")
-    fun setGeoJsonSync(json: String) {
-        if (detached) {
-            return
-        }
-        checkThread()
-        nativeSetGeoJsonStringSync(json)
+        nativeSetGeoJsonString(json)
     }
 
     /**
@@ -487,6 +406,67 @@ class GeoJsonSource : Source {
         }
 
     /**
+     * Sets the state of a feature in this source.
+     *
+     * Feature state can be read in style expressions through `["feature-state", key]`.
+     * The target feature must already have an id in the underlying source data.
+     *
+     * @param featureId the id of the feature whose state to set
+     * @param state     a JSON object with the state key-value pairs to merge
+     * @return true if the source is attached to a map and the update was dispatched
+     */
+    fun setFeatureState(featureId: String, state: JsonObject): Boolean {
+        checkThread()
+        return nativeSetFeatureState(null, featureId, state)
+    }
+
+    /**
+     * Gets the current state of a feature in this source.
+     *
+     * The target feature must already have an id in the underlying source data.
+     *
+     * @param featureId the id of the feature whose state to get
+     * @return the feature state, or null
+     */
+    fun getFeatureState(featureId: String): JsonObject? {
+        checkThread()
+        return nativeGetFeatureState(null, featureId)
+    }
+
+    /**
+     * Removes state from a feature in this source, or from all features when [featureId] is null.
+     *
+     * @param featureId the id of the feature, or null to target all features
+     * @param stateKey  the state key to remove, or null to remove all keys
+     * @return true if the source is attached to a map and the update was dispatched
+     */
+    fun removeFeatureState(featureId: String?, stateKey: String?): Boolean {
+        checkThread()
+        return nativeRemoveFeatureState(null, featureId, stateKey)
+    }
+
+    /**
+     * Removes all state from a single feature in this source.
+     *
+     * @param featureId the id of the feature
+     * @return true if the source is attached to a map and the update was dispatched
+     */
+    fun removeFeatureState(featureId: String): Boolean {
+        checkThread()
+        return nativeRemoveFeatureState(null, featureId, null)
+    }
+
+    /**
+     * Removes all feature state entries from this source.
+     *
+     * @return true if the source is attached to a map and the update was dispatched
+     */
+    fun resetFeatureStates(): Boolean {
+        checkThread()
+        return nativeRemoveFeatureState(null, null, null)
+    }
+
+    /**
      * Queries the source for features.
      *
      * @param filter an optional filter expression to filter the returned Features
@@ -567,18 +547,6 @@ class GeoJsonSource : Source {
 
     @Keep
     private external fun nativeSetGeometry(geometry: Geometry?)
-
-    @Keep
-    private external fun nativeSetGeoJsonStringSync(geoJson: String)
-
-    @Keep
-    private external fun nativeSetFeatureCollectionSync(geoJson: FeatureCollection?)
-
-    @Keep
-    private external fun nativeSetFeatureSync(feature: Feature?)
-
-    @Keep
-    private external fun nativeSetGeometrySync(geometry: Geometry?)
 
     @Keep
     private external fun querySourceFeatures(filter: Array<Any>?): Array<Feature>

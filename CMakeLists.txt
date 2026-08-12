@@ -132,6 +132,13 @@ else()
     add_library(mbgl-core STATIC)
 endif()
 
+# Override visibility for mbgl-core when building amalgamation
+if(MLN_CREATE_AMALGAMATION)
+    target_compile_options(mbgl-core PRIVATE
+        -fvisibility=default
+    )
+endif()
+
 list(APPEND INCLUDE_FILES
     ${PROJECT_SOURCE_DIR}/include/mbgl/gfx/context.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/gfx/drawable.hpp
@@ -165,6 +172,7 @@ list(APPEND SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/mbgl/gfx/dynamic_texture_atlas.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/gfx/gpu_expression.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/gfx/hillshade_prepare_drawable_data.hpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/gfx/color_relief_drawable_data.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/gfx/image_drawable_data.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/gfx/line_drawable_data.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/gfx/symbol_drawable_data.hpp
@@ -244,6 +252,7 @@ list(APPEND INCLUDE_FILES
     ${PROJECT_SOURCE_DIR}/include/mbgl/layermanager/fill_layer_factory.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/layermanager/heatmap_layer_factory.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/layermanager/hillshade_layer_factory.hpp
+    ${PROJECT_SOURCE_DIR}/include/mbgl/layermanager/color_relief_layer_factory.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/layermanager/layer_factory.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/layermanager/layer_manager.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/layermanager/line_layer_factory.hpp
@@ -349,12 +358,15 @@ list(APPEND INCLUDE_FILES
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/background_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/circle_layer.hpp
+    ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/custom_layer_host.hpp
+    ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/custom_layer_init_parameters.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/custom_layer_render_parameters.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/custom_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/fill_extrusion_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/fill_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/heatmap_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/hillshade_layer.hpp
+    ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/color_relief_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/line_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/location_indicator_layer.hpp
     ${PROJECT_SOURCE_DIR}/include/mbgl/style/layers/raster_layer.hpp
@@ -494,6 +506,7 @@ list(APPEND SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/mbgl/layermanager/fill_layer_factory.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/layermanager/heatmap_layer_factory.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/layermanager/hillshade_layer_factory.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/layermanager/color_relief_layer_factory.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/layermanager/layer_factory.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/layermanager/layer_manager.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/layermanager/line_layer_factory.cpp
@@ -575,6 +588,10 @@ list(APPEND SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_heatmap_layer.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_hillshade_layer.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_hillshade_layer.hpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_color_relief_layer.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_color_relief_layer.hpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/color_relief_layer_tweaker.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/color_relief_layer_tweaker.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_line_layer.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_line_layer.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/renderer/layers/render_raster_layer.cpp
@@ -673,6 +690,7 @@ list(APPEND SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/conversion/light.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/conversion/position.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/conversion/property_value.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/style/conversion/hillshade_conversions.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/conversion/rotation.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/conversion/source.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/conversion/source_options.cpp
@@ -758,6 +776,11 @@ list(APPEND SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/hillshade_layer_impl.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/hillshade_layer_properties.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/hillshade_layer_properties.hpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/color_relief_layer.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/color_relief_layer_impl.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/color_relief_layer_impl.hpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/color_relief_layer_properties.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/color_relief_layer_properties.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/line_layer.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/line_layer_impl.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/style/layers/line_layer_impl.hpp
@@ -910,6 +933,7 @@ list(APPEND SRC_FILES
     ${PROJECT_SOURCE_DIR}/src/mbgl/util/i18n.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/util/i18n.hpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/util/identity.cpp
+    ${PROJECT_SOURCE_DIR}/src/mbgl/util/instrumentation.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/util/interpolate.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/util/intersection_tests.cpp
     ${PROJECT_SOURCE_DIR}/src/mbgl/util/intersection_tests.hpp
@@ -1118,7 +1142,7 @@ target_link_libraries(
         mbgl-vendor-unique_resource
         mbgl-vendor-vector-tile
         mbgl-vendor-wagyu
-	    mlt-cpp
+        mlt-cpp
         $<$<BOOL:${MLN_WITH_METAL}>:mbgl-vendor-metal-cpp>
         $<IF:$<BOOL:${MLN_USE_RUST}>,mbgl-rustutils,mbgl-vendor-csscolorparser>
         $<$<BOOL:${MLN_TEXT_SHAPING_HARFBUZZ}>:mbgl-freetype>
@@ -1184,7 +1208,15 @@ if(TARGET mbgl-vendor-wgpu)
     list(APPEND EXPORT_TARGETS mbgl-vendor-wgpu)
 endif()
 
-export(TARGETS ${EXPORT_TARGETS} FILE MapboxCoreTargets.cmake)
+# The Xcode generator with Dawn component targets (no monolithic library) breaks export()
+# because dawn_native/dawn_proc aren't in an export set. Skip export in that case.
+set(_can_export TRUE)
+if(TARGET mbgl-vendor-dawn AND NOT TARGET dawn::webgpu_dawn AND NOT MLN_WEBGPU_EMDAWN)
+    set(_can_export FALSE)
+endif()
+if(_can_export)
+    export(TARGETS ${EXPORT_TARGETS} FILE MapboxCoreTargets.cmake)
+endif()
 
 if(MLN_WITH_VULKAN)
     include(${PROJECT_SOURCE_DIR}/vendor/vulkan.cmake)
@@ -1214,7 +1246,7 @@ if(MLN_WITH_METAL AND MLN_CREATE_AUTORELEASEPOOL)
     # in memory leaks when autoreleased objects are created.
 
     # Platforms such as iOS and GLFW use ARC with @autoreleasepool blocks, for these platforms
-    # creating an AutoreleasePool is not neccesary (and in fact will not work).
+    # creating an AutoreleasePool is not necessary (and in fact will not work).
     # When using MapLibre Native with Metal on other platforms such as Node.js, you can pass
     # this variable to ensure an AutoReleasePool is created in the render loop.
     # See also:

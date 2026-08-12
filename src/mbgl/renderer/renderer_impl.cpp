@@ -29,7 +29,7 @@
 #include <Metal/MTLCaptureManager.hpp>
 #include <Metal/MTLCaptureScope.hpp>
 /// Enable programmatic Metal frame captures for specific frame numbers.
-/// Requries iOS 13
+/// Requires iOS 13
 constexpr auto EnableMetalCapture = 0;
 constexpr auto CaptureFrameStart = 0; // frames are 0-based
 constexpr auto CaptureFrameCount = 1;
@@ -79,6 +79,10 @@ void Renderer::Impl::onShaderCompileFailed(shaders::BuiltIn shaderID,
                                            gfx::Backend::Type type,
                                            const std::string& additionalDefines) {
     observer->onShaderCompileFailed(shaderID, type, additionalDefines);
+}
+
+void Renderer::Impl::onRenderError(std::exception_ptr error) {
+    observer->onRenderError(error);
 }
 
 void Renderer::Impl::setObserver(RendererObserver* observer_) {
@@ -186,22 +190,18 @@ void Renderer::Impl::render(const RenderTree& renderTree, const std::shared_ptr<
     observer->onWillStartRenderingFrame();
 
     const TransformState& state = renderTreeParameters.transformParams.state;
-    const Size& size = state.getSize();
+    const Size& size = staticData->backendSize;
     const EdgeInsets& frustumOffset = state.getFrustumOffset();
-    gfx::ScissorRect scissorRect = {.x = 0, .y = 0, .width = 0, .height = 0};
-    if (!frustumOffset.isFlush()) {
-        scissorRect = {
-            .x = static_cast<int32_t>(frustumOffset.left() * pixelRatio),
+    const gfx::ScissorRect scissorRect = {
+        .x = static_cast<int32_t>(frustumOffset.left() * pixelRatio),
 #if MLN_RENDER_BACKEND_OPENGL
-            .y = static_cast<int32_t>(frustumOffset.bottom() * pixelRatio),
+        .y = static_cast<int32_t>(frustumOffset.bottom() * pixelRatio),
 #else
-            .y = static_cast<int32_t>(frustumOffset.top() * pixelRatio),
+        .y = static_cast<int32_t>(frustumOffset.top() * pixelRatio),
 #endif
-            .width = static_cast<uint32_t>((size.width - (frustumOffset.left() + frustumOffset.right())) * pixelRatio),
-            .height = static_cast<uint32_t>((size.height - (frustumOffset.top() + frustumOffset.bottom())) *
-                                            pixelRatio),
-        };
-    }
+        .width = size.width - static_cast<uint32_t>((frustumOffset.left() + frustumOffset.right()) * pixelRatio),
+        .height = size.height - static_cast<uint32_t>((frustumOffset.top() + frustumOffset.bottom()) * pixelRatio),
+    };
 
     PaintParameters parameters{
         context,
@@ -219,6 +219,7 @@ void Renderer::Impl::render(const RenderTree& renderTree, const std::shared_ptr<
         updateParameters->tileLodMinRadius,
         updateParameters->tileLodScale,
         updateParameters->tileLodPitchThreshold,
+        updateParameters->tileLodMode,
         scissorRect,
     };
 
@@ -317,6 +318,9 @@ void Renderer::Impl::render(const RenderTree& renderTree, const std::shared_ptr<
 
             const auto debugGroup(parameters.encoder->createDebugGroup("common-3d"));
             parameters.pass = RenderPass::Pass3D;
+#if MLN_RENDER_BACKEND_OPENGL
+            parameters.updateStencilBufferAvailability();
+#endif
 
             // TODO is this needed?
             // if (!parameters.staticData.depthRenderbuffer ||
@@ -367,6 +371,9 @@ void Renderer::Impl::render(const RenderTree& renderTree, const std::shared_ptr<
                  .clearColor = color,
                  .clearDepth = 1.0f,
                  .clearStencil = 0});
+#if MLN_RENDER_BACKEND_OPENGL
+            parameters.updateStencilBufferAvailability();
+#endif
         }
     };
 
@@ -472,7 +479,7 @@ void Renderer::Impl::render(const RenderTree& renderTree, const std::shared_ptr<
         renderTreeParameters.loaded ? RendererObserver::RenderMode::Full : RendererObserver::RenderMode::Partial,
         renderTreeParameters.needsRepaint,
         renderTreeParameters.placementChanged,
-        context.renderingStats());
+        context.threadSafeCopyRenderingStats());
 
     if (!renderTreeParameters.loaded) {
         renderState = RenderState::Partial;

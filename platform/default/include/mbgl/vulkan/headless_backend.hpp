@@ -39,8 +39,6 @@ private:
 private:
     std::unique_ptr<Impl> impl;
     bool active = false;
-
-    std::unique_ptr<Texture2D> texture;
 };
 
 } // namespace vulkan

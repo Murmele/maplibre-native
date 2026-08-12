@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    ndkVersion = "28.1.13356709"
+    ndkVersion = "28.2.13676358"
 
     sourceSets {
         getByName("test") {
@@ -71,6 +71,25 @@ android {
             externalNativeBuild {
                 cmake {
                     arguments("-DMLN_WITH_OPENGL=OFF", "-DMLN_WITH_VULKAN=ON")
+                }
+            }
+        }
+        create("webgpuDawn") {
+            dimension = "renderer"
+            externalNativeBuild {
+                cmake {
+                    arguments("-DMLN_WITH_WEBGPU=ON", "-DMLN_WEBGPU_IMPL_DAWN=ON")
+                }
+            }
+        }
+        create("webgpuWgpu") {
+            dimension = "renderer"
+            ndk {
+                abiFilters += "arm64-v8a"
+            }
+            externalNativeBuild {
+                cmake {
+                    arguments("-DMLN_WITH_WEBGPU=ON", "-DMLN_WEBGPU_IMPL_WGPU=ON")
                 }
             }
         }

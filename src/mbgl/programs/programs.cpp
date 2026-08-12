@@ -3,6 +3,7 @@
 #include <mbgl/programs/circle_program.hpp>
 #include <mbgl/programs/heatmap_program.hpp>
 #include <mbgl/programs/hillshade_program.hpp>
+#include <mbgl/programs/color_relief_program.hpp>
 #include <mbgl/programs/fill_extrusion_program.hpp>
 #include <mbgl/programs/fill_program.hpp>
 #include <mbgl/programs/line_program.hpp>
@@ -28,7 +29,7 @@ void registerTypes(gfx::ShaderRegistry& registry, const ProgramParameters& progr
     /// in the parameter pack and register it with the shader registry.
 
     /// Registration calls are wrapped in a lambda that throws on registration
-    /// failure, we shouldn't expect registration to faill unless the shader
+    /// failure, we shouldn't expect registration to fail unless the shader
     /// registry instance provided already has conflicting programs present.
     (
         [](bool expr) {
@@ -50,6 +51,7 @@ void Programs::registerWith(gfx::ShaderRegistry& registry) {
                   HeatmapTextureProgram,
                   HillshadeProgram,
                   HillshadePrepareProgram,
+                  ColorReliefProgram,
                   FillProgram,
                   FillPatternProgram,
                   FillOutlineProgram,

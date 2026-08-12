@@ -62,6 +62,7 @@ public:
                     double tileLodMinRadius,
                     double tileLodScale,
                     double tileLodPitchThreshold,
+                    TileLodMode tileLodMode,
                     const gfx::ScissorRect&);
     ~PaintParameters();
 
@@ -96,7 +97,20 @@ public:
 
     // Stencil handling
 public:
-    void renderTileClippingMasks(const RenderTiles&);
+#if MLN_RENDER_BACKEND_OPENGL
+    /// Update cached stencil availability for the currently bound GL framebuffer.
+    void updateStencilBufferAvailability();
+
+    /// Whether the current GL render target has a stencil buffer.
+    bool renderTargetHasStencilBuffer = true;
+
+    /// Transient GL draw state for the current layer group. GL layer groups reset this from
+    /// `renderTargetHasStencilBuffer`, then disable it if clipping-mask setup fails.
+    bool stencilClippingAvailable = true;
+#endif
+
+    /// @return True when clipping mask state is ready or no update was needed.
+    bool renderTileClippingMasks(const RenderTiles&);
 
     /// Clear the stencil buffer, even if there are no tile masks (for 3D)
     void clearStencil();
@@ -139,6 +153,7 @@ public:
     double tileLodMinRadius;
     double tileLodScale;
     double tileLodPitchThreshold;
+    TileLodMode tileLodMode;
 
     gfx::ScissorRect scissorRect;
 };
